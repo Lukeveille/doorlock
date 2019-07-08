@@ -65,13 +65,13 @@ userRouter.post('/:ip', (req, res) => {
         res.status(500).json({ error: err });
       });
       req.app.io.sockets.emit('left_home', { ip: req.params.ip });
-      console.log('Left home')
+      console.log('User with ip ' + req.params.ip + ' left home')
     } else if (currentStatus === 'not home' && distance < setDistance) {
       user[0].logs.push({ event: 'returned home', status: 'home', timestamp: Date.now() });
       user[0].save().catch(err => {
         res.status(500).json({ error: err });
       });
-      console.log('Returned home')
+      console.log('User with ip ' + req.params.ip + ' returned home')
     }
     res.status(200).json({ distance });
   }).catch(err => {
