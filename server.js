@@ -1,6 +1,20 @@
 import app from './app';
+// import fs from 'fs';
+// import https from 'https';
 
-const port = process.env.PORT || 443;
+// const options = {
+//   cert: fs.readFileSync('./cert.pem'),
+//   key: fs.readFileSync('./keytmp.pem'),
+//   requestCert: false,
+//   rejectUnauthorized: false
+// }
+
+const port = process.env.PORT || 3000;
+
+// const httpsServer = https.createServer(options, app)
+// .listen(port, () => {
+//   console.log('Server running on port ' + port);
+// });
 
 const server = app.listen(port, () => {
   console.log('Server running on port ' + port);
