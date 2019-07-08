@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const latitute = document.querySelector('#homeLat');
   const currentLong = document.querySelector('#long');
   const currentLat = document.querySelector('#lat');
+  const distanceBox = document.querySelector('#distance');
   const currentCoords = {};
   let ip = 0;
 
@@ -48,7 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
               long: position.coords.longitude
             }
           })
-        })
+        }).then(res => (res.json())).then(data => {
+          distanceBox.innerHTML = data.distance;
+        });
         currentLat.innerHTML = currentCoords.latitude;
         currentLong.innerHTML = currentCoords.longitude;
       },
@@ -73,7 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
-  socket.on("left_home", () => {
-    alert("Lock your door!")
+  socket.on("left_home", data => {
+    if (data.ip === ip) {
+      console.log(data);
+      alert("Lock your door!");
+    }
   });
 });

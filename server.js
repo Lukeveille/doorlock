@@ -10,10 +10,6 @@ const io = require('socket.io')(server)
 
 app.io = io;
 
-io.on('connection', socket => {
+io.on('connection', () => {
   console.log('New user connected to socket');
-
-  // socket.on('left_home', data => {
-  //   console.log(data);
-  // });
 });
