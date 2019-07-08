@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   socket.on("left_home", data => {
     if (data.ip === ip) {
-      console.log(data);
       alert("Lock your door!");
     }
   });
