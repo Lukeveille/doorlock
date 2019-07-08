@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           })
         }).then(res => (res.json())).then(data => {
-          distanceBox.innerHTML = data.distance;
+          distanceBox.innerHTML = data.distance < 200? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
         });
         currentLat.innerHTML = currentCoords.latitude;
         currentLong.innerHTML = currentCoords.longitude;
