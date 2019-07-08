@@ -17,8 +17,7 @@ mongoose.connect(
   process.env.PICTGUR_MONGO_PW +
   '@cluster0-fvxju.mongodb.net/test?retryWrites=true&w=majority',
   { useNewUrlParser: true }
-)
-.catch(err => console.error(err));
+).catch(err => console.error(err));
 
 mongoose.Promise = global.Promise;
 
