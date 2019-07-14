@@ -20,41 +20,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fetch("https://ipapi.co/json").then(res => (res.json())).then(data => {
     ip = data.ip;
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        fetch('/api/user', {...fetchOptions,
-          body: JSON.stringify({
-            ip: data.ip,
-            homeCoords: {
-              lat: position.coords.latitude,
-              long: position.coords.longitude
-            }
-          })
-        }).then(res => res.json()).then(data => {
-          latitute.innerHTML = data.homeCoords.lat;
-          longitude.innerHTML = data.homeCoords.long;
+    const login = position => {
+      fetch('/api/user', {...fetchOptions,
+        body: JSON.stringify({
+          ip: data.ip,
+          homeCoords: {
+            lat: position.coords.latitude,
+            long: position.coords.longitude
+          }
         })
-      },
+      }).then(res => res.json()).then(data => {
+        latitute.innerHTML = data.homeCoords.lat;
+        longitude.innerHTML = data.homeCoords.long;
+      })
+    };
+    const updatePosition = position => {
+      currentCoords.latitude = position.coords.latitude;
+      currentCoords.longitude = position.coords.longitude;
+      fetch('/api/user/' + data.ip, {...fetchOptions,
+        body: JSON.stringify({
+          coords: {
+            lat: position.coords.latitude,
+            long: position.coords.longitude
+          }
+        })
+      }).then(res => (res.json())).then(data => {
+        distanceBox.innerHTML = data.distance < 200? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
+      });
+      currentLat.innerHTML = currentCoords.latitude;
+      currentLong.innerHTML = currentCoords.longitude;
+    }
+    navigator.geolocation.getCurrentPosition(
+      login,
       err => console.error(err),
       geoOptions
     );
     navigator.geolocation.watchPosition(
-      position => {
-        currentCoords.latitude = position.coords.latitude;
-        currentCoords.longitude = position.coords.longitude;
-        fetch('/api/user/' + data.ip, {...fetchOptions,
-          body: JSON.stringify({
-            coords: {
-              lat: position.coords.latitude,
-              long: position.coords.longitude
-            }
-          })
-        }).then(res => (res.json())).then(data => {
-          distanceBox.innerHTML = data.distance < 200? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
-        });
-        currentLat.innerHTML = currentCoords.latitude;
-        currentLong.innerHTML = currentCoords.longitude;
-      },
+      updatePosition,
       err => console.error(err),
       geoOptions
     )
