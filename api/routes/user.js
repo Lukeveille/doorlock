@@ -1,52 +1,9 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import User from '../models/user';
 import distanceInM from '../../distance';
 
 const userRouter = express.Router();
-const setDistance = 200;
-
-userRouter.post('/', (req, res) => {
-  User.find({ ip: req.body.ip })
-  .exec()
-  .then(user => {
-    if (!user.length) {
-      console.log("New User created with ip " + req.body.ip + "!");
-      const user = new User({...req.body,
-        _id: new mongoose.Types.ObjectId(),
-        logs: [{ event: 'user created', status: 'home', timestamp: Date.now() }]
-      });
-      user.save().then(() => {
-        res.status(200).json({
-          homeCoords: req.body.homeCoords
-        });
-      }).catch(err => {
-        res.status(500).json({ error: err });
-      });
-    } else {
-      console.log("User with ip " + req.body.ip + " has logged in");
-      
-      const status = Math.floor(distanceInM(
-        user[0].homeCoords.lat,
-        user[0].homeCoords.long,
-        req.body.homeCoords.lat,
-        req.body.homeCoords.long
-      )) > setDistance? 'not home' : 'home';
-
-      const newLog = { event: 'logged in', status, timestamp: Date.now() };
-
-      user[0].logs.push(newLog)
-
-      user[0].save().then(() => {
-        res.status(200).json({
-          homeCoords: user[0].homeCoords
-        });
-      }).catch(err => {
-        res.status(500).json({ error: err });
-      });
-    };
-  });
-});
+const setDistance = 10;
 
 userRouter.post('/:ip', (req, res) => {
   User.find({ ip: req.params.ip })
@@ -64,7 +21,7 @@ userRouter.post('/:ip', (req, res) => {
       user[0].save().catch(err => {
         res.status(500).json({ error: err });
       });
-      req.app.io.sockets.emit('left_home', { ip: req.params.ip });
+      req.app.io.sockets.emit('left-home', { ip: req.params.ip });
       console.log('User with ip ' + req.params.ip + ' left home')
     } else if (currentStatus === 'not home' && distance < setDistance) {
       user[0].logs.push({ event: 'returned home', status: 'home', timestamp: Date.now() });

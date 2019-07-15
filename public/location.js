@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentLong = document.querySelector('#long');
   const currentLat = document.querySelector('#lat');
   const distanceBox = document.querySelector('#distance');
-  const currentCoords = {};
+  let currentCoords = {};
   let ip = 0;
 
   const geoOptions = { enableHighAccuracy: true, timeout: 15000 }
@@ -21,40 +21,31 @@ document.addEventListener('DOMContentLoaded', () => {
   fetch("https://ipapi.co/json").then(res => (res.json())).then(data => {
     ip = data.ip;
     const login = position => {
-      fetch('/api/user', {...fetchOptions,
-        body: JSON.stringify({
-          ip: data.ip,
-          homeCoords: {
-            lat: position.coords.latitude,
-            long: position.coords.longitude
-          }
-        })
-      }).then(res => res.json()).then(data => {
-        latitute.innerHTML = data.homeCoords.lat;
-        longitude.innerHTML = data.homeCoords.long;
-      })
+      socket.emit('login', {
+        ip: data.ip,
+        coords: {
+          lat: position.coords.latitude,
+          long: position.coords.longitude
+        }
+      });
+      currentCoords = position.coords;
     };
     const updatePosition = position => {
-      currentCoords.latitude = position.coords.latitude;
-      currentCoords.longitude = position.coords.longitude;
-      fetch('/api/user/' + data.ip, {...fetchOptions,
-        body: JSON.stringify({
-          coords: {
-            lat: position.coords.latitude,
-            long: position.coords.longitude
-          }
-        })
-      }).then(res => (res.json())).then(data => {
-        distanceBox.innerHTML = data.distance < 200? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
+      socket.emit('new-coords', {
+        ip: data.ip,
+        coords: {
+          lat: position.coords.latitude,
+          long: position.coords.longitude
+        }
       });
-      currentLat.innerHTML = currentCoords.latitude;
-      currentLong.innerHTML = currentCoords.longitude;
-    }
+    };
+
     navigator.geolocation.getCurrentPosition(
       login,
       err => console.error(err),
       geoOptions
     );
+
     navigator.geolocation.watchPosition(
       updatePosition,
       err => console.error(err),
@@ -73,14 +64,28 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
       });
+      socket.emit('distance', { distance: 0 });
       latitute.innerHTML = currentCoords.latitude;
       longitude.innerHTML = currentCoords.longitude;
     };
   });
 
-  socket.on("left_home", data => {
+
+  socket.on('distance', data => {
+    // distanceBox.innerHTML = data.distance < 200? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
+    distanceBox.innerHTML = 'You are approx. ' + data.distance + 'm from home';
+  });
+  socket.on('new-home-display', data => {
+    latitute.innerHTML = data.homeCoords.lat;
+    longitude.innerHTML = data.homeCoords.long;
+  });
+  socket.on('new-current-display', data => {
+    currentLat.innerHTML = data.coords.lat;
+    currentLong.innerHTML = data.coords.long;
+  });
+  socket.on("left-home", data => {
     if (data.ip === ip) {
-      alert("Lock your door!");
-    }
+      alert(data.message);
+    };
   });
 });

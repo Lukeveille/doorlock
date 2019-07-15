@@ -1,4 +1,5 @@
 import app from './app';
+import socket from './socket';
 // import fs from 'fs';
 // import https from 'https';
 
@@ -24,6 +25,4 @@ const io = require('socket.io')(server)
 
 app.io = io;
 
-io.on('connection', () => {
-  console.log('New user connected to socket');
-});
+io.on('connection', socket);
