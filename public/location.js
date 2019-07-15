@@ -6,20 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentLong = document.querySelector('#long');
   const currentLat = document.querySelector('#lat');
   const distanceBox = document.querySelector('#distance');
-  let currentCoords = {};
-  let ip = 0;
-
-  const geoOptions = { enableHighAccuracy: true, timeout: 15000 }
-  const fetchOptions = {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-  }
+  const geoOptions = { enableHighAccuracy: true, timeout: 15000 };
 
   fetch("https://ipapi.co/json").then(res => (res.json())).then(data => {
-    ip = data.ip;
     const login = position => {
       socket.emit('login', {
         ip: data.ip,
@@ -55,25 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   home.addEventListener("click", () => {
     if (confirm('Set current location to home?')) {
-      fetch('/api/user/' + ip, {...fetchOptions,
-        method: 'PUT',
-        body: JSON.stringify({
-          homeCoords: {
-            lat: currentCoords.latitude,
-            long: currentCoords.longitude
-          }
-        })
-      });
-      socket.emit('distance', { distance: 0 });
-      latitute.innerHTML = currentCoords.latitude;
-      longitude.innerHTML = currentCoords.longitude;
+      socket.emit('new-home');
     };
   });
 
-
   socket.on('distance', data => {
-    // distanceBox.innerHTML = data.distance < 200? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
-    distanceBox.innerHTML = 'You are approx. ' + data.distance + 'm from home';
+    distanceBox.innerHTML = data.distance < data.setDistance? 'You are home' : 'You are approx. ' + data.distance + 'm from home';
   });
   socket.on('new-home-display', data => {
     latitute.innerHTML = data.homeCoords.lat;
@@ -83,9 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentLat.innerHTML = data.coords.lat;
     currentLong.innerHTML = data.coords.long;
   });
-  socket.on("left-home", data => {
-    if (data.ip === ip) {
-      alert(data.message);
-    };
+  socket.on('left-home', data => {
+    alert(data.message);
   });
 });

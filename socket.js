@@ -2,25 +2,32 @@ import mongoose from 'mongoose';
 import User from './api/models/user';
 import distanceInM from './distance';
 
-const setDistance = 10;
-
 const socket = socket => {
   console.log('new socket open');
-  let homeCoords = {};
-  let currentCoords = {};
-  let distance = () => {
+  socket.setDistance = 5;
+  socket.homeCoords = {};
+  socket.currentCoords = {};
+  socket.distance = () => {
     return Math.floor(distanceInM(
-      homeCoords.lat,
-      homeCoords.long,
-      currentCoords.lat,
-      currentCoords.long
+      socket.homeCoords.lat,
+      socket.homeCoords.long,
+      socket.currentCoords.lat,
+      socket.currentCoords.long
     ));
   };
-  let currentStatus = '';
-  let currentUser = null;
+  socket.newLog = (event, status) => {
+    const newLog = { event, status, timestamp: Date.now() };
+    socket.currentUser.logs.push(newLog)
+    socket.currentUser.save().then(() => {
+      console.log('User with ip ' + socket.ip + ' has ' + event);
+    }).catch(err => {
+      console.log(err);
+    });
+  }
 
   socket.on('login', data => {
-    User.find({ ip: data.ip })
+    socket.ip = data.ip;
+    User.find({ ip: socket.ip })
     .exec()
     .then(user => {
       if (!user.length) {
@@ -28,79 +35,44 @@ const socket = socket => {
           _id: new mongoose.Types.ObjectId(),
           logs: [{ event: 'user created', status: 'home', timestamp: Date.now() }] 
         })
-
         user.save().then(() => {
           console.log('New User created with ip ' + data.ip + '!');
         }).catch(err => {
           console.log(err);
         });
-
-        currentUser = user;
-
+        socket.currentUser = user;
       } else {
-        homeCoords = user[0].homeCoords;
-        currentCoords = data.coords;
-
-        const status = distance() > setDistance? 'not home' : 'home';
-        
-        console.log(status);
-
-        const newLog = { event: 'logged in', status, timestamp: Date.now() };
-
-        user[0].logs.push(newLog)
-
-        user[0].save().then(() => {
-          console.log('User with ip ' + data.ip + ' has logged in');
-        }).catch(err => {
-          console.log(err);
-        });
-
-        currentUser = user[0];
-        currentStatus = user[0].logs[user[0].logs.length-1].status;
-        
-        socket.emit('new-home-display', { homeCoords });
+        socket.homeCoords = user[0].homeCoords;
+        socket.currentCoords = data.coords;
+        const status = socket.distance() > socket.setDistance? 'not home' : 'home';
+        socket.currentUser = user[0];
+        socket.newLog('logged in', status);
+        socket.emit('new-home-display', { homeCoords: socket.homeCoords });
         socket.emit('new-current-display', { coords: data.coords });
-        socket.emit('distance', { distance: distance() });
+        socket.emit('distance', { distance: socket.distance(), setDistance: socket.setDistance });
       };
     });
   });
   
   socket.on('new-coords', data => {
-    currentCoords = data.coords;
-    socket.emit('distance', { distance: distance() });
+    const currentStatus = socket.currentUser? socket.currentUser.logs[socket.currentUser.logs.length-1].status : '';
+    socket.currentCoords = data.coords;
+    socket.emit('distance', { distance: socket.distance(), setDistance: socket.setDistance });
     socket.emit('new-current-display', { coords: data.coords });
 
-    if (currentStatus === 'home' && distance() > setDistance) {
-      const newLog = { event: 'left home', status: 'not home', timestamp: Date.now() }
-      
-      currentUser.logs.push(newLog);
-      
-      currentUser.save().then(() => {
-        console.log('User with ip ' + data.ip + ' left home');
-        socket.emit('left-home', { message: "Lock your door!", ip: data.ip });
-      }).catch(err => {
-        console.log(err);
-      });
-    } else if (currentStatus === 'not home' && distance() < setDistance) {
-      const newLog = { event: 'returned home', status: 'home', timestamp: Date.now() }
-      
-      currentUser.logs.push(newLog);
-
-      currentUser.save().then(() => {
-        console.log('User with ip ' + req.params.ip + ' returned home')
-      }).catch(err => {
-        console.log(err);
-      });
+    if (currentStatus === 'home' && socket.distance() > socket.setDistance) {
+      socket.newLog('left home', 'not home');
+      socket.emit('left-home', { message: 'Lock your door!' })
+    } else if (currentStatus === 'not home' && socket.distance() < socket.setDistance) {
+      socket.newLog('returned home', 'home');
     };
   });
 
   socket.on('new-home', () => {
-    currentUser.homeCoords = currentCoords;
-    currentUser.save().then(() => {
-      console.log('User with ip ' + req.params.ip + ' updated!')
-    }).catch(err => {
-      console.log(err);
-    });
+    socket.currentUser.homeCoords = socket.currentCoords;
+    socket.newLog('updated', 'home');
+    socket.emit('new-home-display', { homeCoords: socket.currentUser.homeCoords });
+    socket.emit('distance', { distance: 0, setDistance: socket.setDistance });
   });
 };
 

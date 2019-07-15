@@ -2,11 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import userRouter from './api/routes/user';
 
 const app = express();
-
-const apiRouter = express.Router();
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -26,9 +23,6 @@ mongoose.Promise = global.Promise;
 app.get('/', (req, res) => {
   res.render('index');
 });
-app.use('/api', apiRouter);
-
-apiRouter.use('/user', userRouter)
 
 app.use((req, res, next) => {
   const error = new Error('Could not find what you seek');
