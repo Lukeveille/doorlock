@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const socket = io.connect('/');
-  const home = document.querySelector("#home");
-  const longitude = document.querySelector('#homeLong');
-  const latitute = document.querySelector('#homeLat');
-  const currentLong = document.querySelector('#long');
-  const currentLat = document.querySelector('#lat');
-  const distanceBox = document.querySelector('#distance');
-  const geoOptions = { enableHighAccuracy: true, timeout: 15000 };
+  const socket = io.connect('/'),
+  home = document.querySelector("#home"),
+  longitude = document.querySelector('#homeLong'),
+  latitute = document.querySelector('#homeLat'),
+  currentLong = document.querySelector('#long'),
+  currentLat = document.querySelector('#lat'),
+  distanceBox = document.querySelector('#distance'),
+  geoOptions = { enableHighAccuracy: true, timeout: 15000 };
 
   fetch("https://ipapi.co/json").then(res => (res.json())).then(data => {
     const login = position => {
@@ -21,25 +21,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const updatePosition = position => {
       socket.emit('new-coords', {
-        ip: data.ip,
         coords: {
           lat: position.coords.latitude,
           long: position.coords.longitude
         }
       });
     };
-
     navigator.geolocation.getCurrentPosition(
       login,
       err => console.error(err),
       geoOptions
     );
-
     navigator.geolocation.watchPosition(
       updatePosition,
       err => console.error(err),
       geoOptions
-    )
+    );
   });
 
   home.addEventListener("click", () => {

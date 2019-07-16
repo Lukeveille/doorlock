@@ -3,7 +3,7 @@ import User from './api/models/user';
 import distanceInM from './distance';
 
 const socket = socket => {
-  console.log('new socket open');
+  console.log('New socket open');
   socket.setDistance = 5;
   socket.homeCoords = {};
   socket.currentCoords = {};
@@ -23,7 +23,7 @@ const socket = socket => {
     }).catch(err => {
       console.log(err);
     });
-  }
+  };
 
   socket.on('login', data => {
     socket.ip = data.ip;
@@ -33,19 +33,14 @@ const socket = socket => {
       if (!user.length) {
         const user = new User({...data,
           _id: new mongoose.Types.ObjectId(),
-          logs: [{ event: 'user created', status: 'home', timestamp: Date.now() }] 
-        })
-        user.save().then(() => {
-          console.log('New User created with ip ' + data.ip + '!');
-        }).catch(err => {
-          console.log(err);
         });
         socket.currentUser = user;
+        socket.newLog('created account', 'home');
       } else {
-        socket.homeCoords = user[0].homeCoords;
+        socket.currentUser = user[0];
+        socket.homeCoords = socket.currentUser.homeCoords;
         socket.currentCoords = data.coords;
         const status = socket.distance() > socket.setDistance? 'not home' : 'home';
-        socket.currentUser = user[0];
         socket.newLog('logged in', status);
         socket.emit('new-home-display', { homeCoords: socket.homeCoords });
         socket.emit('new-current-display', { coords: data.coords });
