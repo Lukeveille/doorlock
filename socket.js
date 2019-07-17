@@ -3,7 +3,6 @@ import User from './api/models/user';
 import distanceInM from './distance';
 
 const socket = socket => {
-  console.log('New socket open');
   socket.setDistance = 5;
   socket.homeCoords = {};
   socket.currentCoords = {};
@@ -54,6 +53,7 @@ const socket = socket => {
     socket.currentCoords = data.coords;
     socket.emit('distance', { distance: socket.distance(), setDistance: socket.setDistance });
     socket.emit('new-current-display', { coords: data.coords });
+    console.log(data.coords);
 
     if (currentStatus === 'home' && socket.distance() > socket.setDistance) {
       socket.newLog('left home', 'not home');

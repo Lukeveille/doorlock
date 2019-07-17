@@ -5,12 +5,10 @@ import socket from './socket';
 
 // const options = {
 //   cert: fs.readFileSync('./cert.pem'),
-//   key: fs.readFileSync('./keytmp.pem'),
-//   requestCert: false,
-//   rejectUnauthorized: false
+//   key: fs.readFileSync('./keytmp.pem')
 // }
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3443;
 
 // const httpsServer = https.createServer(options, app)
 // .listen(port, () => {
@@ -21,7 +19,7 @@ const server = app.listen(port, () => {
   console.log('Server running on port ' + port);
 });
 
-const io = require('socket.io')(server)
+const io = require('socket.io')(server);
 
 app.io = io;
 
