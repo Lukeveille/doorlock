@@ -4,13 +4,13 @@ import socket from './socket';
 // import https from 'https';
 
 // const options = {
-//   cert: fs.readFileSync('./cert.pem'),
-//   key: fs.readFileSync('./keytmp.pem')
+//   cert: fs.readFileSync('./server.cert'),
+//   key: fs.readFileSync('./server.key')
 // }
 
-const port = process.env.PORT || 3443;
+const port = process.env.PORT || 3000;
 
-// const httpsServer = https.createServer(options, app)
+// const server = https.createServer(options, app)
 // .listen(port, () => {
 //   console.log('Server running on port ' + port);
 // });
